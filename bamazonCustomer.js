@@ -9,90 +9,100 @@ var connection = mysql.createConnection({
     database: 'bamazon_db'
 });
 
-connection.connect();
-
-connection.query(function (error) {
-    if (error) throw error;
-    dbFunction();
-
+connection.connect(function (err) {
+    if (err) throw err;
+    console.log("connected as id: ", connection.threadId);
+    dbFx();
 });
 
-function dbFuntion() {
-    var inquirer = require('inquirer');
-    inquirer
-        .prompt({
-            name: 'POSTOrBUY',
-            type: 'checkbox',
-            message: "Would you like to [POST] an item or [BUY] an item?",
-            choices: ["POST", "BUY", "EXIT"]
-        })
-        .then(answers => {
+function dbFx() {
+    let DBquery = "SELECT * FROM products";
 
-            switch (answers) {
-                case "POST":
-                    dbPost();
-                    break;
-
-                case "BUY":
-                    dbBuy();
-                    break;
-
-                case "EXIT":
-                    connection.end();
-            }
-        });
+    connection.query(DBquery, function (err, result) {
+        console.table(result);
+    });
+    setTimeout(() => {purchase()}, 1000);
 };
 
-function dbPost() {
+function purchase() {
     var inquirer = require('inquirer');
     inquirer
         .prompt([{
                 name: 'itemName',
                 type: 'input',
-                message: "What item you like to submit?"
+                message: "What item ID would you like to purchase?"
             },
             {
-                name: 'itemCatagory',
+                name: 'amount',
                 type: 'input',
-                message: "What catagory?"
-            },
-            {
-                name: 'startingPrice',
-                type: 'input',
-                message: "what is the starting price?"
+                message: "How many?"
             }
 
         ])
-        .then(post => {
+        .then(answers => {
 
+            let DBquery = 'SELECT * FROM products WHERE item_id = ?';
 
-            var query = connection.query('INSERT INTO posts SET ?', 
-            
-            {
-                item_name:post.itemName,
-                catagory: post.itemCatagory,
-                starting_price: post.startingBid
-            }, 
-            function(error) {
-              if (error) throw error;
-              console.log("your post was created succesfully!"); 
-              start();
-            });
-})};
+            connection.query(DBquery, answers.itemName, function (err, result) {
+                
+                const item = answers.itemName;
+                const CustAmount = answers.amount;
+                const dbAmount = result[0].stock_quantity;
+
+                if(!result.length) {
+                    console.log("\r\n");
+                    console.log("Sorry, we do not have that item.  Please try again. ");
+                    console.log("\r\n");
+                    purchase();
+                }
+                else if (CustAmount > dbAmount) {
+                    console.log("\r\n");
+                    console.log("Sorry, we do not have that amount.  Please try again. ");
+                    console.log("\r\n");
+                    purchase();
+                } else {
+                    let DBquery = "UPDATE product SET stock_quantity = ? WHERE item_id = ?"
+                    
+                    // var newDbAmount = dbAmount - CustAmount;
+                    
+                    // connection.query(DBquery, newDbAmount, item, function (err, result) {
+                    //     // if (err) throw err;
+                    //     console.log("\r\n");
+                        console.log(`Thank you for purchasing ${CustAmount} of ${result.product_name}.  Come again soon!`);
+                    // })
+                    connection.end();
+                }
+
+                // }
+                }
+
+            )
+        });
+};
+// {
+//     item_name:post.itemName,
+//     catagory: post.itemCatagory,
+//     starting_price: post.startingBid
+// }, 
+// function(error) {
+//   if (error) throw error;
+//   console.log("your post was created succesfully!"); 
+//   start();
+// });
+
 function dbPost() {
-    connection.query("SELECT * FROM ITEM", function(err, results) {
+    connection.query("SELECT * FROM ITEM", function (err, results) {
         if (err) throw err;
 
-        inquirer.prompt([
-            {
-                name: "choice",
-                type: "raelist",
-                choices: function() {
-                    var choiceArray = [];
-                    for (var i = 0; i < results.length; i++) {
-                        choiceArray.push(results[i].item_name);
-                    }
-                    return choiceArray;
+        inquirer.prompt([{
+                    name: "choice",
+                    type: "raelist",
+                    choices: function () {
+                        var choiceArray = [];
+                        for (var i = 0; i < results.length; i++) {
+                            choiceArray.push(results[i].item_name);
+                        }
+                        return choiceArray;
                     },
                     message: "What item woud you like to purchase?"
                 },
@@ -102,7 +112,7 @@ function dbPost() {
                     message: "How much would you like to pay?"
                 }
             ])
-            .then(function(answer) {
+            .then(function (answer) {
                 var chosenItem;
                 for (var i = 0; i < results.length; i++) {
                     if (results[i].item_name === answer.choice) {
@@ -112,24 +122,23 @@ function dbPost() {
                 if (chosenItem.highest_price < parseInt(answer.bid)) {
 
                     connection.query(
-                        "UPDATE purchase PRICE ? WHERE ?"
-                        [
-                          {highest_price: answer.price},
-                          {id: chosenItem.id
-                        }  
+                        "UPDATE purchase PRICE ? WHERE ?" [{
+                                highest_price: answer.price
+                            },
+                            {
+                                id: chosenItem.id
+                            }
                         ],
-                        function(err) {
-                            if (err)throw err;
+                        function (err) {
+                            if (err) throw err;
                             console.log("price placed successfully!");
                             start();
                         }
                     );
-                }
-                else {
+                } else {
                     console.log("Your price was too high. Will try again....");
                     start();
                 }
             })
-            },
-        )};
-    
+    }, )
+};
