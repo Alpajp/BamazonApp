@@ -1,8 +1,8 @@
-# BamazonApp
-nodejs sql database
+# Bamazon Customer App
 
 
-Bamazon Customer
+
+
 
 This appication is a small amazon mock CLI. The application will display all of the items available for sale. Include the ids, names, and prices of products for sale. Then request item id, and quantity to place order. Use bamazonCustomer.js to run this app.
 
