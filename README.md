@@ -4,7 +4,7 @@
 
 
 
-This appication is a small amazon mock CLI. The application will display all of the items available for sale. Include the ids, names, and prices of products for sale. Then request item id, and quantity to place order. Use bamazonCustomer.js to run this app.
+This application is a small amazon mock CLI. The application will display all of the items available for sale. Include the ids, names, and prices of products for sale. Then request item id, and quantity to place order. Use bamazonCustomer.js to run this app.
 
 How to use bamazonCustomer.js
 The app will prompt user to enter ID of the product they would like to buy, next message will ask how many units of the product they would like to buy.
